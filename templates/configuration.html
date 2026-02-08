@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gérer la configuration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="grid-container">
+        <!-- Sidebar -->
+        {% include 'aside.html' %}
+
+        <!-- Header -->
+        <header class="header">
+            <h2>
+                <span class="material-icons-round" style="font-size:22px;vertical-align:middle;margin-right:6px;">
+                    tune
+                </span>
+                Gérer la configuration
+            </h2>
+            <a href="{{ url_for('index') }}" class="refresh-btn">
+                <span class="material-icons-round" style="font-size:18px;vertical-align:middle;margin-right:6px;">
+                    travel_explore
+                </span>
+                Retour au veilleur
+            </a>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main" id="mainContent">
+
+            <!-- MESSAGES -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="card" style="margin-bottom: 16px;">
+                <div class="card-content">
+                    {% for category, msg in messages %}
+                    {% if category == 'success' %}
+                    <p style="margin-bottom:8px; color:#1f8b4c;">{{ msg }}</p>
+                    {% elif category == 'error' %}
+                    <p style="margin-bottom:8px; color:#c0392b;">{{ msg }}</p>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <!-- CONFIGURATION ACTUELLE -->
+            <div class="card">
+                <div class="card-header">
+                    <span>Configuration actuelle</span>
+                </div>
+                <div class="card-content">
+                    <div class="config-grid">
+                        <!-- Sources -->
+                        <div class="config-item">
+                            <label class="config-label">Sources sélectionnées :</label>
+                            <div id="currentSources" class="config-value">
+                                {% if current_config.sources %}
+                                {% for source in current_config.sources %}
+                                <span class="config-badge">{{ source }}</span>
+                                {% endfor %}
+                                {% else %}
+                                <span class="config-empty">Aucune source sélectionnée</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Flux RSS personnalisés -->
+                        <div class="config-item">
+                            <label class="config-label">Flux RSS personnalisés :</label>
+                            <div id="currentRss" class="config-value config-value-rss">
+                                {% if current_config.custom_sources %}
+                                {% for rss_item in current_config.custom_sources %}
+                                <div class="rss-item">
+                                    <div class="rss-item-info">
+                                        <span class="config-badge config-badge-rss">
+                                            {% if rss_item.name %}{{ rss_item.name }}{% else %}Sans nom{% endif %}
+                                        </span>
+                                        <span class="rss-item-url" title="{{ rss_item.url or rss_item }}">
+                                            {{ rss_item.url or rss_item }}
+                                        </span>
+                                    </div>
+                                    <button type="button" class="btn-delete-rss"
+                                        onclick="deleteRss('{{ rss_item.url or rss_item }}')">✕</button>
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <span class="config-empty">Aucun flux personnalisé</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Mots-clés -->
+                        <div class="config-item">
+                            <label class="config-label">Mots-clés :</label>
+                            <div class="config-value">
+                                {% if current_config.keywords %}
+                                <p class="config-text">{{ current_config.keywords }}</p>
+                                {% else %}
+                                <span class="config-empty">Aucun mot-clé défini</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Fréquence -->
+                        <div class="config-item">
+                            <label class="config-label">Fréquence de collecte :</label>
+                            <div class="config-value">
+                                <span class="config-badge config-badge-frequency">
+                                    {% set freq = current_config.frequency or 'once' %}
+                                    {% if freq == 'once' %}Manuelle
+                                    {% elif freq == 'daily' %}Quotidienne
+                                    {% elif freq == 'weekly' %}Hebdomadaire
+                                    {% elif freq == 'monthly' %}Mensuelle
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODIFICATION DE LA CONFIGURATION -->
+            <div class="card" style="margin-top:24px;">
+                <div class="card-header">
+                    <span>Modifier la configuration</span>
+                </div>
+
+                <div class="card-content">
+                    <form method="post" action="{{ url_for('configurer') }}" id="configForm">
+
+                        <!-- SOURCES -->
+                        <div class="section section-rss">
+                            <label>Ajouter un flux RSS personnalisé</label>
+                            <div class="custom-rss-container">
+                                <div class="custom-rss-field">
+                                    <label class="custom-rss-label">Nom</label>
+                                    <input type="text" name="custom_rss_name" placeholder="Ex: Mon Blog IA"
+                                        class="custom-rss-input">
+                                </div>
+                                <div class="custom-rss-field">
+                                    <label class="custom-rss-label">URL</label>
+                                    <input type="url" name="custom_rss" placeholder="https://example.com/rss.xml"
+                                        class="custom-rss-input">
+                                </div>
+                            </div>
+                            <label>Sources de veille à surveiller</label>
+                            <div class="checkbox-group">
+                                <label>
+                                    <input type="checkbox" name="sources" value="arxiv"> arXiv
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="sources" value="nvidia"> NVIDIA
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="sources" value="huggingface"> Hugging Face
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="sources" value="microsoft_research"> Microsoft
+                                    Research
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="sources" value="langchain"> LangChain
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="sources" value="towards_data_science"> Towards Data
+                                    Science
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="sources" value="mlops_community"> MLOps
+                                    Community
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- KEYWORDS -->
+                        <div class="section">
+                            <label>Thèmes / mots-clés</label>
+                            <textarea name="keywords" rows="4"
+                                placeholder="Ex : LLM, RAG, AutoML, Data Engineering...">{{ current_config.keywords or '' }}</textarea>
+                        </div>
+
+                       
+
+                        <!-- FREQUENCE -->
+                        <div class="section">
+                            <label>Fréquence de collecte</label>
+                            <select name="frequency">
+                                <option value="once" {% if current_config.frequency=='once' %}selected{% endif %}>
+                                    Manuelle</option>
+                                <option value="daily" {% if current_config.frequency=='daily' %}selected{% endif %}>
+                                    Quotidienne</option>
+                                <option value="weekly" {% if current_config.frequency=='weekly' %}selected{% endif %}>
+                                    Hebdomadaire</option>
+                                <option value="monthly" {% if current_config.frequency=='monthly' %}selected{% endif %}>
+                                    Mensuelle</option>
+                            </select>
+                        </div>
+
+                        <!-- Boutons -->
+                        <div class="button-group">
+                            <button type="submit" name="action" value="save" class="refresh-btn">
+                                Enregistrer la configuration
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="footer"></footer>
+    </div>
+
+    <script>
+        // Supprimer un flux RSS
+        function deleteRss(rssUrl) {
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer ce flux ?\n${rssUrl}`)) {
+                return;
+            }
+
+            fetch('/api/delete_rss', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rss_url: rssUrl })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Erreur : ' + (data.message || 'Impossible de supprimer le flux'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors de la suppression du flux');
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Coche les sources sauvegardées
+            const savedSources = {{ (current_config.sources or []) | tojson }};
+            const checkboxes = document.querySelectorAll('input[name="sources"]');
+            checkboxes.forEach(checkbox => {
+                if (savedSources.includes(checkbox.value)) {
+                    checkbox.checked = true;
+                }
+            });
+
+            // Highlight active nav item
+            (function () {
+                const currentUrl = window.location.pathname;
+                document.querySelectorAll('.menu-list li').forEach(li => li.classList.remove('active'));
+                document.querySelectorAll('.menu-list a').forEach(a => {
+                    const href = a.getAttribute('href');
+                    if (!href) return;
+                    try {
+                        let hrefPath = new URL(href, window.location.origin).pathname.replace(/\/$/, '');
+                        let curPath = window.location.pathname.replace(/\/$/, '');
+                        if (hrefPath === '') hrefPath = '/';
+                        if (curPath === '') curPath = '/';
+
+                        if (hrefPath === '/') {
+                            if (curPath === '/') a.classList.add('active');
+                        } else {
+                            if (curPath === hrefPath || curPath.startsWith(hrefPath + '/')) {
+                                a.classList.add('active');
+                            }
+                        }
+                    } catch (e) { }
+                });
+            })();
+        });
+    </script>
+
+</body>
+
+</html>

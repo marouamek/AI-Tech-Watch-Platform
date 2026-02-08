@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Interface Analyste</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="grid-container">
+        <!-- Open Sidebar Button -->
+        <button id="openSidebar" class="open-sidebar-btn" style="display: none;"> &#10095; </button>
+
+        <!-- Sidebar -->
+        {% include 'aside.html' %}
+         <!-- Header -->
+        <header class="header">
+            <h2>Dashboard Décideur</h2>
+        </header>
+        <!-- Main Content -->
+        <main class="main" id="mainContent" style="padding:2rem;">
+            
+            <div class="card" style="margin-top:20px;">
+                <div class="card-header">
+                    <span><h2>Dernière synthèse</h2></span>
+                     <span class="statLabel">
+                               {{ content[2].strftime('%d/%m/%Y') }} •  {{ content[2].strftime('%H:%M') }} 
+                            </span>
+                </div>
+                <div class="card-content">
+                   {% if content %}
+                    
+                        <div class="card article-card" data-source="{{ content[2] }}">
+                           
+                            <p class="statPop">{{ content[0] }}</p>
+                            <p class="card-summary">
+                                {{ content[1] }}
+                            </p>
+                        </div>
+                    
+                    {% else %}
+                        <p>Synthese non disponible.</p>
+                    {% endif %}
+            </div>
+           
+        </main>
+    </div>
+</body>
+  <script>
+        // Sidebar toggle functionality
+        const sidebar = document.getElementById('sidebar');
+        const openSidebarBtn = document.getElementById('openSidebar');
+        const closeSidebarBtn = document.getElementById('closeSidebar');
+        const mainContent = document.getElementById('mainContent');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('hidden');
+            mainContent.classList.toggle('expanded');
+            openSidebarBtn.style.display = sidebar.classList.contains('hidden') ? 'flex' : 'none';
+        }
+
+        closeSidebarBtn.addEventListener('click', toggleSidebar);
+        openSidebarBtn.addEventListener('click', toggleSidebar);
+
+        // Highlight active nav item (by matching href)
+        (function(){
+            const currentUrl = window.location.pathname;
+            document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
+            document.querySelectorAll('.nav-links a').forEach(a => {
+                const href = a.getAttribute('href');
+                if (!href) return;
+                try {
+                    let hrefPath = new URL(href, window.location.origin).pathname.replace(/\/$/, '');
+                    let curPath = window.location.pathname.replace(/\/$/, '');
+                    if (hrefPath === '') hrefPath = '/';
+                    if (curPath === '') curPath = '/';
+
+                    if (hrefPath === '/') {
+                        if (curPath === '/') a.parentElement.classList.add('active');
+                    } else {
+                        if (curPath === hrefPath || curPath.startsWith(hrefPath + '/')) {
+                            a.parentElement.classList.add('active');
+                        }
+                    }
+                } catch (e) {}
+            });
+        })();
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const kwButtons = document.querySelectorAll('.kw-filter-btn');
+            const kwSearch = document.getElementById('kwSearchInput');
+            const kwTags = document.querySelectorAll('.kw-tag');
+            const emptyMsg = document.getElementById('kwEmptyMsg');
+
+            if (!kwTags.length) return;
+
+            let activeCat = 'all';
+
+            function applyKwFilters() {
+                const term = (kwSearch?.value || '').trim().toLowerCase();
+                let visible = 0;
+
+                kwTags.forEach(tag => {
+                    const cat = tag.dataset.cat;
+                    const txt = tag.textContent.toLowerCase();
+                    const matchCat = (activeCat === 'all' || cat === activeCat);
+                    const matchSearch = !term || txt.includes(term);
+
+                    if (matchCat && matchSearch) {
+                        tag.style.display = 'inline-flex';
+                        visible++;
+                    } else {
+                        tag.style.display = 'none';
+                    }
+                });
+
+                if (emptyMsg) {
+                    emptyMsg.style.display = visible ? 'none' : 'block';
+                }
+            }
+
+            kwButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    activeCat = btn.dataset.cat || 'all';
+                    kwButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    applyKwFilters();
+                });
+            });
+
+            if (kwSearch) {
+                kwSearch.addEventListener('input', applyKwFilters);
+            }
+
+            applyKwFilters();
+        });
+    </script>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decide | Connexion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="video-container">
+        <video autoplay muted loop playsinline class="bg-video">
+            <source src="{{ url_for('static', filename='background.mp4') }}" type="video/mp4">
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
+    <div class="center-wrapper">
+        <div class="login-card">
+            <h1 class="brand-title">Decide.</h1>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="username">Identifiant</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" id="password" name="password" required>
+                    
+                    <!-- CONTACT BUTTON: Inside, Small, Black -->
+                    <div style="text-align: right;">
+                        <button type="button" id="openContactModal" class="text-link-btn">
+                            Contact an Admin
+                        </button>
+                    </div>
+                </div>
+                <div id="error-message" class="error-msg"></div>
+                <!-- PRIMARY BUTTON -->
+                <button type="submit" id="submitBtn" class="primary-btn">Se connecter</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="contactModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 style="margin-bottom: 20px;">Contact Admin</h2>
+            <form id="contactForm">
+                <div class="input-group">
+                    <label>Your Email</label>
+                    <input type="email" name="email" required placeholder="email@example.com">
+                </div>
+                <div class="input-group">
+                    <label>Motive</label>
+                    <input type="text" name="motive" required>
+                </div>
+                <div class="input-group">
+                    <label>Message</label>
+                    <textarea name="message" rows="4" required></textarea>
+                </div>
+                <div id="contact-msg" class="error-msg" style="color: black;"></div>
+                <button type="submit" id="sendContactBtn" class="primary-btn">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='login.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Configuration de la veille</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <div class="grid-container">
+      <!-- Sidebar unifiée -->
+      {% include 'aside.html' %}
+
+      <!-- Header -->
+      <header class="header">
+        <h2>Configuration de la veille</h2>
+        <a href="{{ url_for('configuration') }}" class="refresh-btn"
+          >Gérer la configuration</a
+        >
+      </header>
+
+      <!-- Main Content -->
+      <main class="main" id="mainContent">
+        <!-- CONFIGURATION -->
+        <div class="card">
+          <div class="card-header">
+            <span>Configuration</span>
+          </div>
+
+          <div class="card-content">
+            {% with messages = get_flashed_messages(with_categories=true) %} {%
+            if messages %} {% for category, msg in messages %} {% if category ==
+            'success' %}
+            <p style="margin-bottom: 12px; color: #1f8b4c">{{ msg }}</p>
+            {% elif category == 'error' %}
+            <p style="margin-bottom: 12px; color: #c0392b">{{ msg }}</p>
+            {% endif %} {% endfor %} {% endif %} {% endwith %}
+
+            <form method="post" action="{{ url_for('lancer') }}">
+              <!-- SOURCES -->
+              <div class="section section-rss">
+                <label>Ajouter un flux RSS personnalisé</label>
+                <div class="custom-rss-container">
+                  <div class="custom-rss-field">
+                    <label class="custom-rss-label">Nom</label>
+                    <input
+                      type="text"
+                      name="custom_rss_name"
+                      placeholder="Ex: Mon Blog IA"
+                      class="custom-rss-input"
+                    />
+                  </div>
+                  <div class="custom-rss-field">
+                    <label class="custom-rss-label">URL</label>
+                    <input
+                      type="url"
+                      name="custom_rss"
+                      placeholder="https://example.com/rss.xml"
+                      class="custom-rss-input"
+                    />
+                  </div>
+                </div>
+                <label>Sources de veille à surveiller</label>
+                <div class="checkbox-group">
+                  <label>
+                    <input type="checkbox" name="sources" value="arxiv" /> arXiv
+                  </label>
+                  <label>
+                    <input type="checkbox" name="sources" value="nvidia" />
+                    NVIDIA
+                  </label>
+                  <label>
+                    <input type="checkbox" name="sources" value="huggingface" />
+                    Hugging Face
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="sources"
+                      value="microsoft_research"
+                    />
+                    Microsoft Research
+                  </label>
+                  <label>
+                    <input type="checkbox" name="sources" value="langchain" />
+                    LangChain
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="sources"
+                      value="towards_data_science"
+                    />
+                    Towards Data Science
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="sources"
+                      value="mlops_community"
+                    />
+                    MLOps Community
+                  </label>
+                  {% if current_config and current_config.custom_sources %} {%
+                  for rss_item in current_config.custom_sources %}
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="custom_sources"
+                      value="{{ rss_item.url or rss_item }}"
+                    />
+                    {{ rss_item.name or 'Sans nom' }}
+                  </label>
+                  {% endfor %} {% endif %}
+                </div>
+
+                <!-- KEYWORDS -->
+                <div class="section">
+                  <label>Thèmes / mots-clés</label>
+                  <textarea
+                    name="keywords"
+                    rows="4"
+                    placeholder="Ex : LLM, RAG, AutoML, Data Engineering..."
+                  ></textarea>
+                </div>
+              </div>
+              <button
+                type="submit"
+                name="action"
+                value="run"
+                class="refresh-btn"
+              >
+                Lancer la veille
+              </button>
+            </form>
+          </div>
+        </div>
+        <!-- RESULTATS -->
+        {% if articles %}
+        <div class="card card-results" style="margin-top: 24px">
+          <div class="card-header">
+            <span>
+              Résultats de la veille (
+              <span id="resultsCount">{{ articles|length }}</span>
+              )
+            </span>
+          </div>
+
+          <div class="card-content">
+            <!-- FILTRES -->
+            <div class="filters-row">
+              {% if sources %}
+              <div class="filters">
+                <span>Filtrer par source :</span>
+                <button
+                  type="button"
+                  class="toggle-btn-var active"
+                  data-source="all"
+                >
+                  Toutes
+                </button>
+                {% for s in sources %}
+                <button
+                  type="button"
+                  class="toggle-btn-var"
+                  data-source="{{ s }}"
+                >
+                  {{ s }} (<span class="source-count" data-source="{{ s }}"
+                    >{{ articles|selectattr('source', 'equalto', s)|list|length
+                    }}</span
+                  >)
+                </button>
+                {% endfor %}
+              </div>
+              {% endif %}
+
+              <div class="search-box">
+                <input
+                  type="text"
+                  id="searchInput"
+                  placeholder="Rechercher par titre..."
+                />
+              </div>
+            </div>
+
+            <!-- ARTICLES -->
+            <div class="articles-container">
+              <div id="cardTable">
+                {% for a in articles %}
+                <div class="card article-card" data-source="{{ a.source }}">
+                  <!-- En-tête avec source, date et catégorie -->
+                  <div class="statLabel">
+                    <strong>Source :</strong> {{ a.source }} •
+                    <strong>Publié le :</strong> {{ a.published }}
+                  </div>
+
+                  <!-- Titre de l'article -->
+                  <p class="statPop">{{ a.title }}</p>
+
+                  <!-- Short summary (synthèse courte) -->
+                  <p class="card-summary">{{ a.summary_short or "" }}</p>
+
+                  <!-- Actions -->
+                  <div class="card-actions">
+                    <a
+                      class="view-btn"
+                      href="{{ a.link }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Consulter l'article
+                    </a>
+                    <button
+                      class="reject-btn"
+                      onclick="rejeterArticle({{ a.id }}, this)"
+                    >
+                      Rejeter
+                    </button>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- PAGINATION -->
+            <div class="pagination" id="pagination">
+              <button class="nav-btn prev" id="prevPage" disabled>←</button>
+              <div class="page-numbers" id="pageNumbers"></div>
+              <button class="nav-btn next" id="nextPage">→</button>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </main>
+
+      <footer class="footer"></footer>
+    </div>
+
+    <!-- JS FILTRES + RECHERCHE -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const buttons = document.querySelectorAll(".toggle-btn-var");
+        const countSpan = document.getElementById("resultsCount");
+        const searchInput = document.getElementById("searchInput");
+        const cardTable = document.getElementById("cardTable");
+        const prevBtn = document.getElementById("prevPage");
+        const nextBtn = document.getElementById("nextPage");
+        const pageNumbers = document.getElementById("pageNumbers");
+
+        let activeSource = "all";
+        let currentPage = 1;
+        const itemsPerPage = 6;
+
+        function applyFilters() {
+          const cards = document.querySelectorAll(".article-card");
+          const term = (searchInput.value || "").toLowerCase();
+          let visible = 0;
+          let visibleCards = [];
+
+          cards.forEach((card) => {
+            const sourceMatch =
+              activeSource === "all" || card.dataset.source === activeSource;
+            const textMatch = card.innerText.toLowerCase().includes(term);
+
+            if (sourceMatch && textMatch) {
+              visibleCards.push(card);
+              visible++;
+            }
+          });
+
+          countSpan.textContent = visible;
+
+          // Reset to page 1 when filters change
+          currentPage = 1;
+          displayPage(visibleCards);
+        }
+
+        function displayPage(visibleCards) {
+          const allCards = document.querySelectorAll(".article-card");
+          allCards.forEach((card) => (card.style.display = "none"));
+
+          const start = (currentPage - 1) * itemsPerPage;
+          const end = start + itemsPerPage;
+          const cardsToShow = visibleCards.slice(start, end);
+
+          cardsToShow.forEach((card) => (card.style.display = ""));
+
+          updatePagination(visibleCards.length);
+        }
+
+        function updatePagination(totalItems) {
+          const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+          prevBtn.disabled = currentPage === 1 || totalPages === 0;
+          nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+
+          pageNumbers.innerHTML = "";
+          if (totalPages <= 1) return;
+
+          const siblings = 1; // nb de pages autour de la page courante
+
+          const createPageBtn = (page) => {
+            const pageBtn = document.createElement("button");
+            pageBtn.textContent = page;
+            pageBtn.className =
+              "page-number" + (page === currentPage ? " active" : "");
+            pageBtn.addEventListener("click", () => {
+              currentPage = page;
+              const visibleCards = getVisibleCards();
+              displayPage(visibleCards);
+            });
+            return pageBtn;
+          };
+
+          // Toujours afficher la page 1
+          pageNumbers.appendChild(createPageBtn(1));
+
+          let left = Math.max(2, currentPage - siblings);
+          let right = Math.min(totalPages - 1, currentPage + siblings);
+
+          // Ellipsis à gauche
+          if (left > 2) {
+            const span = document.createElement("span");
+            span.textContent = "...";
+            span.className = "page-ellipsis";
+            pageNumbers.appendChild(span);
+          }
+
+          // Pages autour de la courante
+          for (let i = left; i <= right; i++) {
+            pageNumbers.appendChild(createPageBtn(i));
+          }
+
+          // Ellipsis à droite
+          if (right < totalPages - 1) {
+            const span = document.createElement("span");
+            span.textContent = "...";
+            span.className = "page-ellipsis";
+            pageNumbers.appendChild(span);
+          }
+
+          // Dernière page
+          if (totalPages > 1) {
+            pageNumbers.appendChild(createPageBtn(totalPages));
+          }
+        }
+
+        function getVisibleCards() {
+          const cards = document.querySelectorAll(".article-card");
+          const term = (searchInput.value || "").toLowerCase();
+          let visibleCards = [];
+
+          cards.forEach((card) => {
+            const sourceMatch =
+              activeSource === "all" || card.dataset.source === activeSource;
+            const textMatch = card.innerText.toLowerCase().includes(term);
+
+            if (sourceMatch && textMatch) {
+              visibleCards.push(card);
+            }
+          });
+
+          return visibleCards;
+        }
+
+        // expose globally so other functions (rejeterArticle) can call it
+        window.applyFilters = applyFilters;
+
+        buttons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            activeSource = btn.dataset.source;
+            buttons.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            applyFilters();
+          });
+        });
+
+        if (searchInput) {
+          searchInput.addEventListener("input", applyFilters);
+        }
+
+        if (prevBtn) {
+          prevBtn.addEventListener("click", () => {
+            if (currentPage > 1) {
+              currentPage--;
+              const visibleCards = getVisibleCards();
+              displayPage(visibleCards);
+            }
+          });
+        }
+
+        if (nextBtn) {
+          nextBtn.addEventListener("click", () => {
+            const visibleCards = getVisibleCards();
+            const totalPages = Math.ceil(visibleCards.length / itemsPerPage);
+            if (currentPage < totalPages) {
+              currentPage++;
+              displayPage(visibleCards);
+            }
+          });
+        }
+
+        // Initial display
+        if (buttons.length && cardTable) {
+          applyFilters();
+        }
+      });
+
+      function rejeterArticle(id, btn) {
+        fetch(`/rejeter/${id}`, {
+          method: "POST",
+        })
+          .then((r) => r.json())
+          .then(() => {
+            const card = btn.closest(".article-card");
+            const source = card.dataset.source;
+            card.remove();
+
+            // 🔥 Mise à jour du compteur total
+            const countSpan = document.getElementById("resultsCount");
+            const newTotal = parseInt(countSpan.textContent) - 1;
+            countSpan.textContent = newTotal;
+
+            // 🔥 Mise à jour des compteurs par source
+            const sourceCountElements = document.querySelectorAll(
+              `.source-count[data-source="${source}"]`,
+            );
+            sourceCountElements.forEach((el) => {
+              el.textContent = parseInt(el.textContent) - 1;
+            });
+
+            // Re-apply filters to recalc visible counts
+            if (window.applyFilters) window.applyFilters();
+          });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Interface Analyste</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <div class="grid-container">
+      <!-- Sidebar -->
+      {% include 'aside.html' %}
+
+      <!-- Header -->
+      <header class="header">
+        <h2>Interface Analyste</h2>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main" id="mainContent">
+        <!-- Vue d'ensemble -->
+        <div class="card">
+          <div class="card-header">
+            <span>Vue d'ensemble de la veille</span>
+          </div>
+          <div class="card-content">
+            <div class="stats-grid">
+              <div class="stat-card stat-card-main">
+                <span class="stat-label">Total d’articles collectés</span>
+                <span class="stat-value">{{ total_articles }}</span>
+              </div>
+
+              {% for src, count in by_source.items() %}
+              <div class="stat-card">
+                <span class="stat-label">{{ src }}</span>
+                <span class="stat-value">{{ count }}</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Classification & tendances -->
+        <div class="card" style="margin-top: 20px">
+          <div class="card-header">
+            <span>Classification par catégorie & tendances</span>
+          </div>
+          <div class="card-content analytics-grid">
+            <!-- Bloc gauche : répartition par catégorie -->
+            <div class="analytics-block">
+              <h3 class="analytics-title">Répartition par catégorie</h3>
+              {% if by_category %}
+              <table class="cat-table">
+                <thead>
+                  <tr>
+                    <th>Catégorie</th>
+                    <th>Documents</th>
+                    <th>Part</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for cat, count in by_category.items() %}
+                  <tr>
+                    <td>{{ cat }}</td>
+                    <td>{{ count }}</td>
+                    <td>
+                      {% if total_articles %} {{ (count * 100 / total_articles)
+                      | round(1) }} % {% else %} - {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  <!-- Ligne total -->
+                  <tr class="total-row">
+                    <td><strong>Total</strong></td>
+                    <td><strong>{{ total_articles }}</strong></td>
+                    <td><strong>100 %</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+              {% else %}
+              <p>Aucune catégorie disponible pour l’instant.</p>
+              {% endif %} 
+            </div>
+
+            <!-- Bloc droit : tendances -->
+            <div class="analytics-block">
+              <h3 class="analytics-title">Tendances fortes</h3>
+              {% if trends.top_categories %}
+              <ol class="trend-list ranked">
+                {% for cat in trends.top_categories %}
+                <li>
+                  <span class="trend-rank">{{ loop.index }}</span>
+                  <span class="trend-label">{{ cat }}</span>
+                </li>
+                {% endfor %}
+              </ol>
+              {% else %}
+              <p>Aucune tendance significative détectée.</p>
+              {% endif %} 
+            </div>
+          </div>
+        </div>
+
+        <!-- Algorithmes émergents & meilleures pratiques -->
+        <div class="card" style="margin-top: 20px">
+          <div class="card-header">
+            <span>Algorithmes émergents & meilleures pratiques</span>
+          </div>
+          <div class="card-content">
+            {% if emerging_by_category %}
+            <div class="filters-row">
+              <div class="filters">
+                <span>Filtrer par catégorie :</span>
+                <button
+                  type="button"
+                  class="filter-btn kw-filter-btn active"
+                  data-cat="all"
+                >
+                  Toutes
+                </button>
+                {% for cat in emerging_by_category.keys() %}
+                <button
+                  type="button"
+                  class="filter-btn kw-filter-btn"
+                  data-cat="{{ cat }}"
+                >
+                  {{ cat }}
+                </button>
+                {% endfor %}
+              </div>
+              <div class="search-box">
+                <input
+                  type="text"
+                  id="kwSearchInput"
+                  placeholder="Rechercher un mot-clé..."
+                />
+              </div>
+            </div>
+
+            <p class="section-title">Mots-clés / algorithmes émergents</p>
+            <div class="tag-group" id="kwTagContainer">
+              {% for cat, kws in emerging_by_category.items() %} {% for kw in
+              kws %}
+              <span class="tag tag-alt kw-tag" data-cat="{{ cat }}"
+                >{{ kw|capitalize }}</span
+              >
+              {% endfor %} {% endfor %}
+            </div>
+            <p
+              id="kwEmptyMsg"
+              style="display: none; font-size: 12px; color: #718096"
+            >
+              Aucun mot-clé ne correspond aux filtres.
+            </p>
+            {% else %}
+            <p>
+              Aucune donnée suffisante pour extraire des mots-clés émergents.
+            </p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Fiches synthétiques pour décideurs -->
+        <div class="card" style="margin-top: 20px">
+          <div class="card-header">
+            <span>Fiches synthétiques pour décideurs</span>
+          </div>
+          <div class="card-content">
+            <div class="decision-cards decision-cards--single">
+              <div class="decision-card decision-card--inline">
+                <h3>LLM & GenAI pour le traitement des données</h3>
+                <div class="decision-card-actions decision-card-actions--right">
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/view_synthese/1'"
+                  >
+                    Voir les fiches
+                  </button>
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/add_synthese/1'"
+                  >
+                    Ajouter
+                  </button>
+                </div>
+              </div>
+              <div class="decision-card decision-card--inline">
+                <h3>Qualité & Préparation des données avec IA</h3>
+                <div class="decision-card-actions decision-card-actions--right">
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/view_synthese/2'"
+                  >
+                    Voir les fiches
+                  </button>
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/add_synthese/2'"
+                  >
+                    Ajouter
+                  </button>
+                </div>
+              </div>
+              <div class="decision-card decision-card--inline">
+                <h3>Retrieval & Connaissances augmentées pour données</h3>
+                <div class="decision-card-actions decision-card-actions--right">
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/view_synthese/3'"
+                  >
+                    Voir les fiches
+                  </button>
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/add_synthese/3'"
+                  >
+                    Ajouter
+                  </button>
+                </div>
+              </div>
+              <div class="decision-card decision-card--inline">
+                <h3>Adaptation & Entraînement sur données massives</h3>
+                <div class="decision-card-actions decision-card-actions--right">
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/view_synthese/4'"
+                  >
+                    Voir les fiches
+                  </button>
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/add_synthese/4'"
+                  >
+                    Ajouter
+                  </button>
+                </div>
+              </div>
+              <div class="decision-card decision-card--inline">
+                <h3>Architecture & Infrastructures data-centric AI</h3>
+                <div class="decision-card-actions decision-card-actions--right">
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/view_synthese/5'"
+                  >
+                    Voir les fiches
+                  </button>
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/add_synthese/5'"
+                  >
+                    Ajouter
+                  </button>
+                </div>
+              </div>
+              <div class="decision-card decision-card--inline">
+                <h3>Observabilité, Gouvernance & Ops</h3>
+                <div class="decision-card-actions decision-card-actions--right">
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/view_synthese/6'"
+                  >
+                    Voir les fiches
+                  </button>
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/add_synthese/6'"
+                  >
+                    Ajouter
+                  </button>
+                </div>
+              </div>
+              <div class="decision-card decision-card--inline">
+                <h3>Veille, tendances & synthèse</h3>
+                <div class="decision-card-actions decision-card-actions--right">
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/view_synthese/7'"
+                  >
+                    Voir les fiches
+                  </button>
+                  <button
+                    class="view-btn"
+                    onclick="window.location.href = '/add_synthese/7'"
+                  >
+                    Ajouter
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Derniers articles -->
+        <div class="card" style="margin-top: 20px">
+          <div class="card-header">
+            <span>Derniers articles collectés</span>
+          </div>
+          <div class="card-content">
+            {% if recent_articles %}
+            <div id="cardTable">
+              {% for a in recent_articles %}
+              <div class="card article-card" data-source="{{ a.source }}">
+                <div class="statLabel">{{ a.source }} • {{ a.published }}</div>
+                <p class="statPop">{{ a.title }}</p>
+                <p class="card-summary">{{ a.summary_short }}</p>
+                <div class="card-actions">
+                  <a
+                    class="view-btn"
+                    href="{{ a.get('link', '#') }}"
+                    target="_blank"
+                  >
+                    Consulter l'article
+                  </a>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p>Aucun article disponible pour le moment.</p>
+            {% endif %}
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer"></footer>
+    </div>
+
+    <script>
+      // Filtres sur les mots-clés / algorithmes émergents
+      document.addEventListener("DOMContentLoaded", function () {
+        const kwButtons = document.querySelectorAll(".kw-filter-btn");
+        const kwSearch = document.getElementById("kwSearchInput");
+        const kwTags = document.querySelectorAll(".kw-tag");
+        const emptyMsg = document.getElementById("kwEmptyMsg");
+
+        if (!kwTags.length) return;
+
+        let activeCat = "all";
+
+        function applyKwFilters() {
+          const term = (kwSearch?.value || "").trim().toLowerCase();
+          let visible = 0;
+
+          kwTags.forEach((tag) => {
+            const cat = tag.dataset.cat;
+            const txt = tag.textContent.toLowerCase();
+            const matchCat = activeCat === "all" || cat === activeCat;
+            const matchSearch = !term || txt.includes(term);
+
+            if (matchCat && matchSearch) {
+              tag.style.display = "inline-flex";
+              visible++;
+            } else {
+              tag.style.display = "none";
+            }
+          });
+
+          if (emptyMsg) {
+            emptyMsg.style.display = visible ? "none" : "block";
+          }
+        }
+
+        kwButtons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            activeCat = btn.dataset.cat || "all";
+            kwButtons.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            applyKwFilters();
+          });
+        });
+
+        if (kwSearch) {
+          kwSearch.addEventListener("input", applyKwFilters);
+        }
+
+        applyKwFilters();
+      });
+    </script>
+  </body>
+</html>

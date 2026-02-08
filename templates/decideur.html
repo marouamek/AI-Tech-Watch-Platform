@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Dashboard Décideur</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+        .synthese-section {
+            margin-top: 36px;
+        }
+        .synthese-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            color: #2c3e50;
+        }
+        .synthese-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        .synthese-card {
+            flex: 1 1 300px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+            padding: 24px 20px;
+            min-width: 260px;
+            margin-bottom: 18px;
+        }
+        .synthese-card h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2563eb;
+        }
+        .synthese-card p {
+            font-size: 0.97rem;
+            color: #444;
+        }
+        @media (max-width: 900px) {
+            .cards-row,
+            .charts-row,
+            .synthese-list {
+            flex-direction: column;
+            }
+        }
+        </style>
+    </head>
+    <body>
+        <div class="grid-container">
+        <!-- Sidebar -->
+        {% include 'aside.html' %}
+
+        <!-- Header -->
+        <header class="header">
+            <h2>Dashboard Décideur</h2>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main" id="mainContent">
+            <!-- SECTION ALERTES -->
+            <div class="alert-section-card">
+                <div class="alert-header">
+                    <span>Alertes Stratégiques</span>
+                        <div class="alert-trends">
+                            {% for kw in trending_keywords %}
+                                <span class="trend-tag">{{ kw }}</span>
+                            {% endfor %}
+                        </div>
+                </div>
+
+                <div class="alert-list">
+                    {% for alert in alerts %}
+                    <div class="alert-item" onclick='openAlertModal({{ alert|tojson }})'>
+
+                        <div class="alert-title">
+                            <span>{{ alert.title }}
+                            <span class="recency-badge">{{ alert.recency_label }}</span></span>
+                            <span style="color: #c53030; font-size: 0.75rem; font-weight: bold">BREAKTHROUGH</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #718096; margin-top: 5px">
+                            Source: {{ alert.source }} &bull; {{ alert.published }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="container">
+                <!-- Cartes synthétiques -->
+                <div class="card" style="margin-bottom: 24px">
+                    <div class="card-header">
+                        <span>Vue d'ensemble</span>
+                    </div>
+                    <div class="card-content">
+                        <div class="stats-grid">
+                            <div class="stat-card stat-card-main">
+                                <span class="stat-label">Documents analysés</span>
+                                <span class="stat-value">{{ total_articles }}</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">Sources surveillées</span>
+                                <span class="stat-value">{{ total_sources }}</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">Catégorie</span>
+                                <span class="stat-value">
+                                    {{ top_category[0] if top_category else "Aucune" }}
+                                </span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">Dernière veille</span>
+                                <span class="stat-value">
+                                    {{ last_fetch.strftime('%d/%m/%Y') if last_fetch else
+                                    "Aucune" }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Graphiques -->
+                <div class="card" style="margin-bottom: 24px">
+                    <div class="card-header">
+                        <span>Répartition & suivi par classification</span>
+                    </div>
+                        <div class="card-content charts-row">
+                            <div class="analytics-block">
+                                <h3 class="analytics-title">Répartition par classification</h3>
+                                <canvas id="barChart" height="120"></canvas>
+                            </div>
+                            <div class="analytics-block">
+                                <h3 class="analytics-title">Suivi par classification</h3>
+                                <!-- Suppression du select ici -->
+                                <canvas id="lineChart" height="150"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+            <!-- Synthèse par classification -->
+            <div class="card" style="margin-bottom: 24px">
+                <div class="card-header">
+                    <span>Synthèse par classification</span>
+                </div>
+                <div class="card-content">
+                    <div class="decision-cards decision-cards--single">
+                        <div class="decision-card decision-card--inline">
+                            <h3>LLM & GenAI pour le traitement des données</h3>
+                        <div class="decision-card-actions decision-card-actions--right">
+                            <button class="view-btn"onclick="window.location.href = '/view_last_synthese/1'">Voir</button>
+                            <button class="view-btn" onclick="window.location.href = '/view_synthese/1'">Plus...</button>
+                            </div>
+                        </div>
+                    <div class="decision-card decision-card--inline">
+                    <h3>Qualité & Préparation des données avec IA</h3>
+                    <div class="decision-card-actions decision-card-actions--right">
+                        <button
+                        class="view-btn"
+                        onclick="window.location.href = '/view_last_synthese/2'">
+                        Voir
+                        </button>
+                        <button class="view-btn" onclick="window.location.href = '/view_synthese/2'">Plus ...</button>
+                    </div>
+                    </div>
+                    <div class="decision-card decision-card--inline">
+                    <h3>Retrieval & Connaissances augmentées pour données</h3>
+                    <div class="decision-card-actions decision-card-actions--right">
+                        <button
+                        class="view-btn"
+                        onclick="window.location.href = '/view_last_synthese/3'"
+                        >
+                        Voir
+                        </button>
+                        <button
+                        class="view-btn"
+                        onclick="window.location.href = '/view_synthese/3'"
+                        >
+                        Plus ...
+                        </button>
+                    </div>
+                    </div>
+                    <div class="decision-card decision-card--inline">
+                    <h3>Adaptation & Entraînement sur données massives</h3>
+                    <div class="decision-card-actions decision-card-actions--right">
+                        <button
+                        class="view-btn"
+                        onclick="window.location.href = '/view_last_synthese/4'"
+                        >
+                        Voir
+                        </button>
+                        <button
+                        class="view-btn"
+                        onclick="window.location.href = '/view_synthese/4'"
+                        >
+                        Plus ...
+                        </button>
+                    </div>
+                    </div>
+                    <div class="decision-card decision-card--inline">
+                    <h3>Architecture & Infrastructures data-centric AI</h3>
+                    <div class="decision-card-actions decision-card-actions--right">
+                        <button
+                        class="view-btn"
+                        onclick="window.location.href = '/view_last_synthese/5'"
+                        >
+                        Voir
+                        </button>
+                        <button
+                        class="view-btn"
+                        onclick="window.location.href = '/view_synthese/5'"
+                        >
+                        Plus ...
+                        </button>
+                    </div>
+                    </div>
+                    <div class="decision-card decision-card--inline">
+                    <h3>Observabilité, Gouvernance & Ops</h3>
+                    <div class="decision-card-actions decision-card-actions--right">
+                        <button
+                        class="view-btn"
+                        onclick="window.location.href = '/view_last_synthese/6'"
+                        >
+                        Voir
+                        </button>
+                        <button
+                        class="view-btn"
+                        onclick="window.location.href = '/view_synthese/6'"
+                        >
+                        Plus ...
+                        </button>
+                    </div>
+                    </div>
+                    <div class="decision-card decision-card--inline">
+                    <h3>Veille, tendances & synthèse</h3>
+                    <div class="decision-card-actions decision-card-actions--right">
+                        <button
+                        class="view-btn"
+                        onclick="window.location.href = '/view_last_synthese/7'"
+                        >
+                        Voir
+                        </button>
+                        <button
+                        class="view-btn"
+                        onclick="window.location.href = '/view_synthese/7'"
+                        >
+                        Plus ...
+                        </button>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            </div>
+        </main>
+
+        <footer class="footer"></footer>
+        </div>
+
+        <!-- MODALE D'ALERTE -->
+        <div id="alertModal" class="modal-overlay" onclick="closeAlertModal(event)">
+        <div class="modal-box">
+            <div class="modal-header-badge">Fiche de veille stratégique</div>
+            <h2 id="modalTitle" class="modal-title-main"></h2>
+            <div class="modal-meta">
+            <span id="modalSource" style="font-weight: 600"></span>
+            &bull;
+            <span id="modalDate"></span>
+            </div>
+            <div class="modal-summary-box">
+            <h4 class="modal-summary-title">Résumé stratégique</h4>
+            <p id="modalSummary" class="modal-summary-text"></p>
+            </div>
+            <div class="modal-footer">
+            <a
+                id="modalLink"
+                class="modal-cta-link"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="display: none"
+            >
+                Ouvrir l'article
+            </a>
+            <button
+                onclick="document.getElementById('alertModal').style.display = 'none'"
+                style="
+                background: #4a5568;
+                color: white;
+                border: none;
+                padding: 9px 16px;
+                border-radius: 999px;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 600;
+                "
+            >
+                Fermer
+            </button>
+            </div>
+        </div>
+        </div>
+
+        <script>
+
+            // recuperation des données pour les graphiques
+        const trend_labels = {{ trend_labels|tojson }};
+        const trend_series = {{ trend_series|tojson }};
+
+
+        // Script alerte
+        function openAlertModal(article) {
+            document.getElementById("modalTitle").textContent = article.title;
+            document.getElementById("modalSource").textContent = article.source;
+            document.getElementById("modalDate").textContent = article.published;
+            document.getElementById("modalSummary").textContent =
+            article.summary ||
+            article.summary_short ||
+            "Aucun résumé disponible.";
+            const linkEl = document.getElementById("modalLink");
+            if (article.link) {
+            linkEl.href = article.link;
+            linkEl.style.display = "inline-flex";
+            } else {
+            linkEl.style.display = "none";
+            }
+            document.getElementById("alertModal").style.display = "flex";
+        }
+
+        function closeAlertModal(event) {
+            if (event.target.id === "alertModal")
+            document.getElementById("alertModal").style.display = "none";
+        }
+
+         // Chart.js - Bar Chart (Répartition par classification)
+        const barCtx = document.getElementById('barChart').getContext('2d');
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+               labels: trend_labels,
+                datasets: [{
+                    label: 'Documents',
+                    data: trend_series,
+                    backgroundColor: [
+                        '#2563eb', '#10b981', '#f59e42', '#f43f5e', '#6366f1', '#ec4899', '#14b8a6' , '#fbbf24' , '#34d399', '#60a5fa'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+              
+                scales: { 
+ 
+                            x: {
+                                ticks: { display: false }
+                            },
+                        y: { beginAtZero: true } }}
+        });
+
+        // Chart.js - Line Chart (Suivi par classification, toutes les courbes)
+        const lineData = {{ line_data|tojson }};
+        const lineLabels = {{ line_labels|tojson }};
+        const lineColors = [
+            '#2563eb', '#10b981', '#f59e42', '#f43f5e', '#6366f1', '#ec4899', '#305cd6',' #fbbf24', '#34d399', '#60a5fa',' #f87171',' #8b5cf6'
+        ];
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        const datasets = Object.keys(lineData).map((key, idx) => ({
+            label: key,
+            data: lineData[key],
+            borderColor: lineColors[idx],
+            backgroundColor: lineColors[idx] + '22', // Opacité faible pour le fill
+            tension: 0.3,
+            fill: false
+        }));
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: lineLabels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: true } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+        </script>
+    </body>
+</html>

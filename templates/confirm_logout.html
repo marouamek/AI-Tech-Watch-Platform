@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Confirmer la déconnexion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Styles locaux pour la card quand nécessaire */
+        .centered-card{max-width:560px;margin:4rem auto;padding:2rem;border-radius:10px;box-shadow:0 6px 18px rgba(15,23,42,0.06);background:#fff;text-align:center;border:1px solid rgba(15,23,42,0.03)}
+        .centered-card h2{margin:0 0 0.5rem;font-size:24px;font-weight:700}
+        .lead{color:#6B7280;margin:0 0 1rem}
+        .actions{display:flex;justify-content:center;gap:12px;margin-top:6px;align-items:center}
+        .actions form{display:inline-flex;align-items:center;margin:0;padding:0;vertical-align:middle}
+
+        /* Base button style to ensure consistent sizing/layout */
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0.6rem 1.25rem;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;border:none;min-width:120px;vertical-align:middle;min-height:44px;box-sizing:border-box}
+        .btn[disabled], .btn:disabled{opacity:0.6;cursor:not-allowed}
+
+        /* Ensure no extra top margin from global rules (keeps buttons aligned) */
+        .actions .btn { margin-top: 0; }
+
+        /* Variants */
+        .btn-danger{background:#DC2626;color:#fff;border:1px solid transparent}
+        .btn-secondary{background:#F9FAFB;color:#374151;border:1px solid #E5E7EB}
+
+        @media (max-width:600px){.centered-card{margin:2rem 1rem;padding:1rem}.actions{flex-direction:column}.btn{width:100%;min-width:0}}
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <!-- Open Sidebar Button (small screens) -->
+        <button id="openSidebar" class="open-sidebar-btn" style="display:none"> &#10095; </button>
+
+        {% include 'aside.html' %}
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent" style="padding:2rem;">
+            <div class="centered-card">
+                <h2>Confirmer la déconnexion</h2>
+                <p class="lead">Êtes-vous sûr(e) de vouloir vous déconnecter ?</p>
+
+                <div class="actions">
+                    <form method="post" action="/logout">
+                        <button type="submit" class="btn btn-danger">Confirmer</button>
+                    </form>
+
+                    <button type="button" class="btn btn-secondary" onclick="history.back()">Annuler</button>
+                </div>
+
+                <p class="note" style="margin-top:1rem;font-size:12px;color:#9CA3AF">Vous serez redirigé(e) vers la page de connexion après la déconnexion.</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Create Account | Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .form-card { max-width: 640px; margin: 2rem auto; background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display:block; font-weight:600; margin-bottom:6px; color:#374151 }
+        .input-group input, .input-group select { width:100%; padding:10px; border:1px solid #E5E7EB; border-radius:6px }
+        .primary-btn { background:#2563EB; color:#fff; padding:10px 14px; border:none; border-radius:8px; cursor:pointer; font-weight:700 }
+        .error-msg { margin:8px 0; color:#DC2626 }
+    </style>
+</head>
+
+<body>
+    <div class="grid-container">
+        <!-- Open Sidebar Button -->
+        <button id="openSidebar" class="open-sidebar-btn" style="display: none;"> &#10095; </button>
+
+      {% include 'aside.html' %}
+      <header class="header">
+              <h2 class="page-title">Create User</h2>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main" id="mainContent">
+
+            <div class="form-card">
+                <form id="createUserForm" action="GET">
+                    <div class="input-group">
+                        <label>Username</label>
+                        <input type="text" name="username" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Role</label>
+                        <select name="role">
+                            <option value="veilleur">Veilleur</option>
+                            <option value="analyste">Analyste</option>
+                            <option value="decideur">Décideur</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="email" name="email" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Temp Password</label>
+                        <input type="text" name="password" required>
+                    </div>
+
+                    <div id="admin-msg" class="error-msg"></div>
+
+                    <button type="submit" class="primary-btn">Create User</button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+       
+
+        document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('admin-msg');
+            msg.textContent = "Processing...";
+            const data = Object.fromEntries(new FormData(e.target));
+
+            try {
+                const res = await fetch('/api/admin/create_user', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                msg.textContent = result.message;
+                msg.style.color = result.success ? 'green' : 'red';
+                if (result.success) {
+                    e.target.reset();
+                }
+            } catch (err) { msg.textContent = "Error"; }
+        });
+    </script>
+</body>
+
+</html>

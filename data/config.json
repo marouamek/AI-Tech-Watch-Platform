@@ -1,0 +1,12 @@
+{
+  "custom_sources": [
+    {
+      "url": "https://bigdataanalyticsnews.com/category/artificial-intelligence/feed/",
+      "name": "BigData Analytics News"
+    },
+    {
+      "url": "https://venturebeat.com/category/big-data/feed/",
+      "name": "Venture Beat"
+    }
+  ]
+}

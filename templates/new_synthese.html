@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Interface Analyste</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <div class="grid-container">
+      <!-- Sidebar -->
+      {% include 'aside.html' %}
+
+      <!-- Header -->
+      <header class="header">
+        <h2>Créer une synthèse</h2>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main" id="mainContent">
+        <div class="card">
+          <div class="card-header">
+            <span>Créer une nouvelle synthèse</span>
+          </div>
+          <div class="card-content">
+            <form method="post" class="section">
+              <label for="title">Titre de la synthèse</label>
+              <input type="text" id="title" name="title" required />
+
+              <label for="content" style="margin-top: 12px"
+                >Contenu de la synthèse</label
+              >
+              <textarea
+                id="content"
+                name="content"
+                rows="10"
+                required
+              ></textarea>
+
+              <div class="button-group">
+                <button
+                  type="button"
+                  class="primary-btn"
+                  onclick="window.location.href='{{ url_for('analyste') }}'"
+                >
+                  Annuler
+                </button>
+                <button type="submit" class="primary-btn">
+                  Créer la synthèse
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer"></footer>
+    </div>
+  </body>
+</html>

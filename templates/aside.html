@@ -1,0 +1,97 @@
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+<aside id="sidebar" class="sidenav">
+  <nav class="menu">
+    <div class="menu-top">
+      <button id="toggleSidebar" class="toggle-btn" aria-label="Toggle sidebar">
+        ☰
+      </button>
+      <div class="logo-container menu-text">
+        <h2>Veille IA</h2>
+        <span style="font-size: 0.75rem; color: #9ca3af; letter-spacing: 1px"
+          >PLATEFORME</span
+        >
+      </div>
+    </div>
+
+<ul class="menu-list">
+  {% if session.get('role') == 'admin' %}
+  <li>
+    <a href="{{ url_for('dashboard_admin') }}"
+       class="menu-link {% if request.endpoint in ['dashboard_admin'] %}active{% endif %}">
+      <span class="menu-icon material-icons-round">dashboard_customize</span>
+      <span class="menu-text">Overview</span>
+    </a>
+  </li>
+  <li>
+    <a href="{{ url_for('dashboard_admin_create_account') }}"
+       class="menu-link {% if request.endpoint in ['dashboard_admin_create_account'] %}active{% endif %}">
+      <span class="menu-icon material-icons-round">person_add</span>
+      <span class="menu-text">Create Account</span>
+    </a>
+  </li>
+  {% endif %}
+  {% if session.get('role') in ['admin', 'veilleur'] %}
+  <li>
+    <a href="{{ url_for('index') }}"
+       class="menu-link {% if request.endpoint in ['index', 'lancer'] %}active{% endif %}">
+      <span class="menu-icon material-icons-round">travel_explore</span>
+      <span class="menu-text">Veilleur</span>
+    </a>
+  </li>
+  {% endif %}
+  {% if session.get('role') in ['admin', 'analyste'] %}
+  <li>
+    <a href="{{ url_for('analyste') }}"
+       class="menu-link {% if request.endpoint in ['analyste','add_synthese'] %}active{% endif %}">
+      <span class="menu-icon material-icons-round">analytics</span>
+      <span class="menu-text">Analyste</span>
+    </a>
+  </li>
+  {% endif %}
+  {% if session.get('role') in ['admin', 'decideur'] %}
+  <li>
+    <a href="{{ url_for('decideur') }}"
+       class="menu-link {% if request.endpoint in ['decideur','view_last_synthese'] %}active{% endif %}">
+      <span class="menu-icon material-icons-round">gavel</span>
+      <span class="menu-text">Décideur</span>
+    </a>
+  </li>
+  {% endif %}
+  
+  <li style="margin-top: auto;">
+    <a href="/logout" class="menu-link logout-link">
+      <span class="menu-icon material-icons-round">logout</span>
+      <span class="menu-text">Logout</span>
+    </a>
+  </li>
+</ul>
+  </nav>
+</aside>
+
+<script>
+  // Sidebar (état ouvert / fermé, mémorisé dans localStorage)
+  (function () {
+    const toggleBtn = document.getElementById("toggleSidebar");
+    const sidebar = document.getElementById("sidebar");
+    const SIDEBAR_KEY = "sidebarCollapsed";
+
+    if (!toggleBtn || !sidebar) return;
+
+    let isCollapsed = localStorage.getItem(SIDEBAR_KEY);
+    if (isCollapsed === null) {
+      isCollapsed = "false";
+      localStorage.setItem(SIDEBAR_KEY, isCollapsed);
+    }
+
+    if (isCollapsed === "true") {
+      sidebar.classList.add("collapsed");
+      document.body.classList.add("sidebar-collapsed");
+    }
+
+    toggleBtn.addEventListener("click", function () {
+      const nowCollapsed = sidebar.classList.toggle("collapsed");
+      document.body.classList.toggle("sidebar-collapsed");
+      localStorage.setItem(SIDEBAR_KEY, nowCollapsed ? "true" : "false");
+    });
+  })();
+</script>
